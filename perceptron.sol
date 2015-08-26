@@ -2,7 +2,7 @@ contract Perceptron {
     int256[][] public training_data;
     bool[] public target_decisions;
     int256[] public weights;
-    int256 threshold = 0;
+    int256 public threshold = 0;
     event Log(int256, int256);
   
     function dotProduct(int[] w,int[] x) returns (int ret) {
@@ -16,6 +16,21 @@ contract Perceptron {
             int256 _x = x[i];
             ret += _w * _x;
         }        
+    }
+    
+    function array_is_equal(int256[] a, int256[] b) returns (bool) {
+        /*
+        Compares arrays for equality
+        */
+        if (a.length != b.length) {
+            return false;   
+        }
+        for(uint i=0; i< a.length; i++) {
+            if (a[i] != b[i]) {
+                return false;
+            }
+        }
+        return true;
     }
     
     function decide(int256[] data) returns (bool) {
@@ -58,11 +73,22 @@ contract Perceptron {
     }
   
     function learn(uint max_iterations) {
-        bool converged = false;
-        int256 threshold = 0;
-        int256 last_threshold = 0;		
+        uint converged = 0;
+        int256 last_threshold = 0;	
+        int256[] memory last_weights;
+        
         for (uint i = 0; i < max_iterations; i++) {
-            threshold = learnOnce();
+            learnOnce();
+            if (last_threshold == threshold ||
+                    array_is_equal(last_weights, weights)) {
+                converged++;
+                if (converged == 3) {
+                    // no change for three iterations
+                    return;
+                }
+            }    
+            last_threshold = threshold;
+            last_weights = weights;
             Log(4, threshold);
         }
     }
